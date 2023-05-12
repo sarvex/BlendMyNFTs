@@ -31,16 +31,12 @@ def select_material(material_list, variant, enable_rarity):
     # print(f"RARITY_LIST_OF_I:{rarity_list_of_i}")
 
     for b in rarity_list_of_i:
-        if b == 0:
-            if_zero_bool = True
-        elif b != 0:
-            if_zero_bool = False
-
+        if_zero_bool = b == 0
     if enable_rarity:
         try:
             if if_zero_bool:
                 selected_material = random.choices(material_list_of_i, k=1)
-            elif not if_zero_bool:
+            else:
                 selected_material = random.choices(material_list_of_i, weights=rarity_list_of_i, k=1)
         except IndexError:
             log.error(
@@ -87,16 +83,12 @@ def match_dna_to_variant(hierarchy, single_dna):
 
     list_attributes = list(hierarchy.keys())
     list_dna_decunstructed = single_dna.split('-')
-    dna_dictionary = {}
-
-    for i, j in zip(list_attributes, list_dna_decunstructed):
-        dna_dictionary[i] = j
-
-    for x in dna_dictionary:
+    dna_dictionary = dict(zip(list_attributes, list_dna_decunstructed))
+    for x, value in dna_dictionary.items():
         for k in hierarchy[x]:
             k_num = hierarchy[x][k]["number"]
-            if k_num == dna_dictionary[x]:
-                dna_dictionary.update({x: k})
+            if k_num == value:
+                dna_dictionary[x] = k
     return dna_dictionary
 
 
@@ -142,7 +134,7 @@ def apply_materials(hierarchy, single_dna, materials_file, enable_rarity):
 
     material_dna = ""
     for a in deconstructed_material_dna:
-        num = "-" + str(deconstructed_material_dna[a])
+        num = f"-{str(deconstructed_material_dna[a])}"
         material_dna += num
     material_dna = ''.join(material_dna.split('-', 1))
 

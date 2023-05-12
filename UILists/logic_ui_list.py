@@ -51,7 +51,7 @@ class CUSTOM_OT_logic_actions(Operator):
                 self.report({'INFO'}, info)
 
             elif self.action == 'REMOVE':
-                info = 'Item "%s" removed from list' % (scn.logic_fields[idx].name)
+                info = f'Item "{scn.logic_fields[idx].name}" removed from list'
                 scn.logic_fields_index -= 1
                 scn.logic_fields.remove(idx)
                 self.report({'INFO'}, info)
@@ -61,7 +61,7 @@ class CUSTOM_OT_logic_actions(Operator):
                 item = scn.logic_fields.add()
                 item.name = "Rule"
                 scn.logic_fields_index = len(scn.logic_fields) - 1
-                info = '"%s" added to list' % (item.name)
+                info = f'"{item.name}" added to list'
                 self.report({'INFO'}, info)
             else:
                 self.report({'INFO'}, "Nothing selected in the Viewport")

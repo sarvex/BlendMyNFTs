@@ -32,7 +32,9 @@ def save_generation_state(input):
     Saves date and time of generation start, and generation types; Images, Animations, 3D Models, and the file types for
     each.
     """
-    file_name = os.path.join(input.batch_json_save_path, "Batch{}.json".format(input.batch_to_generate))
+    file_name = os.path.join(
+        input.batch_json_save_path, f"Batch{input.batch_to_generate}.json"
+    )
     batch = json.load(open(file_name))
 
     current_time = datetime.datetime.now().strftime("%H:%M:%S")
@@ -40,11 +42,13 @@ def save_generation_state(input):
     local_timezone = str(datetime.datetime.now(datetime.timezone.utc))
 
     if "Generation Save" in batch:
-        batch_save_number = int(batch[f"Generation Save"].index(batch[f"Generation Save"][-1]))
+        batch_save_number = int(
+            batch["Generation Save"].index(batch["Generation Save"][-1])
+        )
     else:
         batch_save_number = 0
 
-    batch["Generation Save"] = list()
+    batch["Generation Save"] = []
     batch["Generation Save"].append({
             "Batch Save Number": batch_save_number + 1,
             "DNA Generated": None,
@@ -114,7 +118,9 @@ def save_generation_state(input):
 def save_completed(full_single_dna, a, x, batch_json_save_path, batch_to_generate):
     """Saves progress of rendering to batch.json file."""
 
-    file_name = os.path.join(batch_json_save_path, "Batch{}.json".format(batch_to_generate))
+    file_name = os.path.join(
+        batch_json_save_path, f"Batch{batch_to_generate}.json"
+    )
     batch = json.load(open(file_name))
     index = batch["batch_dna_list"].index(a)
     batch["batch_dna_list"][index][full_single_dna]["complete"] = True
@@ -129,7 +135,9 @@ def get_batch_data(batch_to_generate, batch_json_save_path):
     Retrieves a given batches data determined by renderBatch in config.py
     """
 
-    file_name = os.path.join(batch_json_save_path, "Batch{}.json".format(batch_to_generate))
+    file_name = os.path.join(
+        batch_json_save_path, f"Batch{batch_to_generate}.json"
+    )
     batch = json.load(open(file_name))
 
     nfts_in_batch = batch["nfts_in_batch"]
@@ -197,7 +205,7 @@ def render_and_save_nfts(input):
                 for k in hierarchy[x]:
                     k_num = hierarchy[x][k]["number"]
                     if k_num == dna_dictionary[x]:
-                        dna_dictionary.update({x: k})
+                        dna_dictionary[x] = k
             return dna_dictionary
 
         def match_material_dna_to_material(single_dna, material_dna, materials_file):
@@ -279,7 +287,7 @@ def render_and_save_nfts(input):
                     raise TypeError()
 
         dna_dictionary = match_dna_to_variant(single_dna)
-        name = input.nft_name + "_" + str(order_num)
+        name = f"{input.nft_name}_{str(order_num)}"
 
         # Change Text Object in Scene to match DNA string:
         # Variables that can be used: full_single_dna, name, order_num
@@ -308,7 +316,9 @@ def render_and_save_nfts(input):
         time_start_2 = time.time()
 
         # Main paths for batch sub-folders:
-        batch_folder = os.path.join(input.nft_batch_save_path, "Batch" + str(input.batch_to_generate))
+        batch_folder = os.path.join(
+            input.nft_batch_save_path, f"Batch{str(input.batch_to_generate)}"
+        )
 
         image_folder = os.path.join(batch_folder, "Images")
         animation_folder = os.path.join(batch_folder, "Animations")
@@ -328,9 +338,8 @@ def render_and_save_nfts(input):
             Delete a file if a fail state is detected and if the file being re-generated already exists. Prevents
             animations from corrupting.
             """
-            if input.fail_state:
-                if os.path.exists(file_path):
-                    os.remove(file_path)
+            if input.fail_state and os.path.exists(file_path):
+                os.remove(file_path)
 
         # Generation/Rendering:
         if input.enable_images:
@@ -577,7 +586,7 @@ def render_and_save_nfts(input):
 
         json_meta_data = json.dumps(meta_data_dict, indent=1, ensure_ascii=True)
 
-        with open(os.path.join(bmnft_data_folder, "Data_" + name + ".json"), 'w') as outfile:
+        with open(os.path.join(bmnft_data_folder, f"Data_{name}.json"), 'w') as outfile:
             outfile.write(json_meta_data + '\n')
 
         log.info(f"{TextColors.OK}\nTIME [NFT {name} Generated]: {time.time() - time_start_2}s")
@@ -603,9 +612,9 @@ def render_and_save_nfts(input):
                   "Average time per generation": batch_complete_time / x - 1}
 
     batch_info_folder = os.path.join(
-            input.nft_batch_save_path,
-            "Batch" + str(input.batch_to_generate),
-            "batch_info.json"
+        input.nft_batch_save_path,
+        f"Batch{str(input.batch_to_generate)}",
+        "batch_info.json",
     )
 
     save_batch(batch_info, batch_info_folder)

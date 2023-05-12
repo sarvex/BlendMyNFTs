@@ -10,19 +10,15 @@ def get_python_args():
 
     argv = sys.argv
 
-    if "--" not in argv:
-        argv = []  # as if no args are passed
-    else:
-        argv = argv[argv.index("--") + 1:]  # get all args after "--"
-
+    argv = [] if "--" not in argv else argv[argv.index("--") + 1:]
     usage_text = (
         "Run Blend_My_NFTs heedlessly from the command line\n"
         "usage:\n"
         "blender -background --python <Path to BMNFTs __init__.py> -- --config-file <path to config file>"
     )
-    
+
     parser = argparse.ArgumentParser(description=usage_text)
-    
+
     parser.add_argument("--config-file",
                         dest="config_path",
                         metavar='FILE',
@@ -57,7 +53,7 @@ def get_python_args():
                         required=False,
                         help="Use pre-existing batch data for rendering"
                         )
-    
+
     parser.add_argument("--logic-file",
                         dest="logic_file",
                         metavar='FILE',

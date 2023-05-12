@@ -34,12 +34,11 @@ def remove_file_by_extension(dirlist):
     if str(type(dirlist)) == "<class 'list'>":
         dirlist = list(dirlist)  # converts single string path to list if dir pasted as string
 
-    return_dirs = []
-    for directory in dirlist:
-        if not str(os.path.split(directory)[1]) in removeList:
-            return_dirs.append(directory)
-
-    return return_dirs
+    return [
+        directory
+        for directory in dirlist
+        if str(os.path.split(directory)[1]) not in removeList
+    ]
 
 
 # TODO: fix colours in console logs and find a way to include coloured text in .txt file.
@@ -60,7 +59,7 @@ def save_result(result):
     Saves json result to json file at the specified path.
     """
     file_name = "log.json"
-    if platform.system() == "Linux" or platform.system() == "Darwin":
+    if platform.system() in ["Linux", "Darwin"]:
         path = os.path.join(os.path.join(os.path.expanduser('~')), 'Desktop', file_name)
 
     if platform.system() == "Windows":
@@ -113,7 +112,7 @@ def get_hierarchy():
         for collection in list(script_ignore_coll.children):
             list_all_collections.remove(collection.name)
             list_coll = list(collection.children)
-            if len(list_coll) > 0:
+            if list_coll:
                 all_script_ignore(collection)
 
     all_script_ignore(script_ignore_collection)
@@ -295,7 +294,7 @@ def check_rarity(hierarchy, dna_list_formatted, save_path):
                 if l == k:
                     name = full_num_name[i][k]
                     num = num_dict[j][l]
-                    x[name] = [(str(round(((num / num_nfts_generated) * 100), 2)) + "%"), str(num)]
+                    x[name] = [f"{str(round(num / num_nfts_generated * 100, 2))}%", str(num)]
 
         complete_data[i] = x
 
@@ -324,10 +323,7 @@ def check_rarity(hierarchy, dna_list_formatted, save_path):
 
 def check_duplicates(dna_list_formatted):
     """Checks if there are duplicates in dna_list before NFTRecord.json is sent to JSON file."""
-    dna_list = []
-    for i in dna_list_formatted:
-        dna_list.append(list(i.keys())[0])
-
+    dna_list = [list(i.keys())[0] for i in dna_list_formatted]
     duplicates = 0
     seen = set()
 
@@ -358,9 +354,9 @@ def check_failed_batches(batch_json_save_path):
 
         for i in batch_folders:
             batch = json.load(open(os.path.join(batch_json_save_path, i)))
-            nfts_in_batch = batch["nfts_in_batch"]
             if "Generation Save" in batch:
                 dna_generated = batch["Generation Save"][-1]["DNA Generated"]
+                nfts_in_batch = batch["nfts_in_batch"]
                 if dna_generated is not None and dna_generated < nfts_in_batch:
                     fail_state = True
                     failed_batch = int(i.removeprefix("Batch").removesuffix(".json"))
@@ -374,8 +370,7 @@ def raise_error_num_batches(max_nfts, nfts_per_batch):
     """Checks if number of Batches is less than maxNFTs, if not raises error."""
 
     try:
-        num_batches = max_nfts / nfts_per_batch
-        return num_batches
+        return max_nfts / nfts_per_batch
     except ZeroDivisionError:
         log.error(
                 f"\n{traceback.format_exc()}"
@@ -524,8 +519,7 @@ def activate_logging():
     bpy.
     """
 
-    log_path = bpy.context.scene.input_tool.log_path
-    if log_path:
+    if log_path := bpy.context.scene.input_tool.log_path:
         file_handler = logging.FileHandler(os.path.join(log_path, 'BMNFTs_Log.txt'), 'a')
     else:
         file_handler = logging.FileHandler(os.path.join(tempfile.gettempdir(), 'BMNFTs_Log.txt'), 'a')

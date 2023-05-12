@@ -183,65 +183,51 @@ def get_bmnft_data():
     _save_path = bpy.path.abspath(bpy.context.scene.input_tool.save_path)
     _Blend_My_NFTs_Output, _batch_json_save_path, _nftBatch_save_path = make_directories(_save_path)
 
-    # IMPORTANT: if a new directory variable is ever added, use 'bpy.path.abspath' instead of 'os.path.abspath'.
-    data = BMNFTData(
+    return BMNFTData(
         nft_name=bpy.context.scene.input_tool.nft_name,
-        save_path=bpy.path.abspath(_save_path),  # Converting from Blender's relative path system to absolute.
+        save_path=bpy.path.abspath(
+            _save_path
+        ),  # Converting from Blender's relative path system to absolute.
         nfts_per_batch=bpy.context.scene.input_tool.nfts_per_batch,
         batch_to_generate=bpy.context.scene.input_tool.batch_to_generate,
         collection_size=bpy.context.scene.input_tool.collection_size,
-
         enable_rarity=bpy.context.scene.input_tool.enable_rarity,
-
         blend_my_nfts_output=_Blend_My_NFTs_Output,
         batch_json_save_path=_batch_json_save_path,
         nft_batch_save_path=_nftBatch_save_path,
-
         enable_logic=bpy.context.scene.input_tool.enable_logic,
         enable_logic_json=bpy.context.scene.input_tool.enable_logic_json,
         logic_file=bpy.path.abspath(bpy.context.scene.input_tool.logic_file),
-
         enable_images=bpy.context.scene.input_tool.image_bool,
         image_file_format=bpy.context.scene.input_tool.image_enum,
-
         enable_animations=bpy.context.scene.input_tool.animation_bool,
         animation_file_format=bpy.context.scene.input_tool.animation_enum,
-
         enable_models=bpy.context.scene.input_tool.model_bool,
         model_file_format=bpy.context.scene.input_tool.model_enum,
-
         enable_custom_fields=bpy.context.scene.input_tool.enable_custom_fields,
-
         cardano_metadata_bool=bpy.context.scene.input_tool.cardano_metadata_bool,
         solana_metadata_bool=bpy.context.scene.input_tool.solana_metadata_bool,
         erc721_metadata=bpy.context.scene.input_tool.erc721_metadata,
-
         cardano_description=bpy.context.scene.input_tool.cardano_description,
         solana_description=bpy.context.scene.input_tool.solana_description,
         erc721_description=bpy.context.scene.input_tool.erc721_description,
-
         enable_materials=bpy.context.scene.input_tool.enable_materials,
-        materials_file=bpy.path.abspath(bpy.context.scene.input_tool.materials_file),
-
+        materials_file=bpy.path.abspath(
+            bpy.context.scene.input_tool.materials_file
+        ),
         enable_auto_shutdown=bpy.context.scene.input_tool.enable_auto_shutdown,
-
         specify_time_bool=bpy.context.scene.input_tool.specify_time_bool,
         hours=bpy.context.scene.input_tool.hours,
         minutes=bpy.context.scene.input_tool.minutes,
-
         email_notification_bool=bpy.context.scene.input_tool.email_notification_bool,
         sender_from=bpy.context.scene.input_tool.sender_from,
         email_password=bpy.context.scene.input_tool.email_password,
         receiver_to=bpy.context.scene.input_tool.receiver_to,
-
         enable_debug=bpy.context.scene.input_tool.enable_debug,
         order_num_offset=bpy.context.scene.input_tool.order_num_offset,
         log_path=bpy.path.abspath(bpy.context.scene.input_tool.log_path),
-
-        enable_dry_run=bpy.context.scene.input_tool.enable_dry_run
+        enable_dry_run=bpy.context.scene.input_tool.enable_dry_run,
     )
-
-    return data
 
 
 # ======== Helper functions ======== #
@@ -275,7 +261,7 @@ def run_as_headless():
     for key in cprefs.devices.keys():
         cprefs.devices[key].use = True
 
-    print('Using {} devices for rendering!'.format(cprefs.get_num_gpu_devices()))
+    print(f'Using {cprefs.get_num_gpu_devices()} devices for rendering!')
 
     # def dumpSettings(settings):
     #     output = (
@@ -312,7 +298,11 @@ def run_as_headless():
     # dumpSettings(settings)
 
     with open(args.config_path, 'r') as f:
-        configs = [line.strip() for line in f.readlines() if not (line[0] == '#' or len(line.strip()) < 1)]
+        configs = [
+            line.strip()
+            for line in f.readlines()
+            if line[0] != '#' and len(line.strip()) >= 1
+        ]
 
         pairs = [config.strip().split('=') for config in configs]
 
@@ -592,14 +582,15 @@ class CreateData(bpy.types.Operator):
         # Handling Custom Fields UIList input:
         input = get_bmnft_data()
 
-        if input.enable_logic:
-            if input.enable_logic_json and not input.logic_file:
-                self.report({'ERROR'},
-                            f"No Logic.json file path set. Please set the file path to your Logic.json file.")
+        if input.enable_logic and input.enable_logic_json and not input.logic_file:
+            self.report(
+                {'ERROR'},
+                "No Logic.json file path set. Please set the file path to your Logic.json file.",
+            )
 
         intermediate.send_to_record(input)
 
-        self.report({'INFO'}, f"NFT Data created!")
+        self.report({'INFO'}, "NFT Data created!")
         return {"FINISHED"}
 
     def invoke(self, context, event):
@@ -642,7 +633,9 @@ class ResumeFailedBatch(bpy.types.Operator):
 
         _batchToGenerate = bpy.context.scene.input_tool.batch_to_generate
 
-        file_name = os.path.join(_batch_json_save_path, "Batch{}.json".format(_batchToGenerate))
+        file_name = os.path.join(
+            _batch_json_save_path, f"Batch{_batchToGenerate}.json"
+        )
         batch_data = json.load(open(file_name))
 
         _fail_state, _failed_batch, _failed_dna, _failed_dna_index = helpers.check_failed_batches(_batch_json_save_path)
@@ -715,7 +708,7 @@ class ResumeFailedBatch(bpy.types.Operator):
 
         exporter.render_and_save_nfts(input)
 
-        self.report({'INFO'}, f"Resuming Failed Batch Generation!")
+        self.report({'INFO'}, "Resuming Failed Batch Generation!")
 
         return {"FINISHED"}
 
@@ -873,7 +866,7 @@ class BMNFTS_PT_CreateData(bpy.types.Panel):
             row = col.row(align=True)
             row.operator("logic_uilist.logic_clear_list", icon="X")
             row = col.row(align=True)
-            row.label(text=f"*Field Names must be unique.")
+            row.label(text="*Field Names must be unique.")
 
             row = layout.row()
             row.prop(input_tool_scene, "enable_logic_json")
@@ -981,7 +974,7 @@ class BMNFTS_PT_GenerateNFTs(bpy.types.Panel):
             row = layout.row()
             col = row.column(align=True)
             row = col.row(align=True)
-            row.label(text=f"*Field Names must be unique.")
+            row.label(text="*Field Names must be unique.")
             row = col.row(align=True)
             row.operator("custom_metadata_fields_uilist.clear_list", icon="X")
 
@@ -1063,11 +1056,11 @@ class BMNFTS_PT_Other(bpy.types.Panel):
             row.prop(input_tool_scene, "specify_time_bool")
 
             time_row1 = layout.row()
-            time_row1.label(text=f"Hours")
+            time_row1.label(text="Hours")
             time_row1.prop(input_tool_scene, "hours", text="")
 
             time_row2 = layout.row()
-            time_row2.label(text=f"Minutes")
+            time_row2.label(text="Minutes")
             time_row2.prop(input_tool_scene, "minutes", text="")
 
             if not bpy.context.scene.input_tool.specify_time_bool:
@@ -1094,7 +1087,7 @@ class BMNFTS_PT_Other(bpy.types.Panel):
 
         layout.separator()
 
-        layout.label(text=f"Running Blend_My_NFTs Headless:")
+        layout.label(text="Running Blend_My_NFTs Headless:")
 
         save_path = bpy.path.abspath(bpy.context.scene.input_tool.save_path)
 
@@ -1103,7 +1096,7 @@ class BMNFTS_PT_Other(bpy.types.Panel):
             self.layout.operator("export.settings", icon='FOLDER_REDIRECT', text="Export BMNFTs Settings to a File")
         else:
             row = layout.row()
-            layout.label(text=f"**Set a Save Path in Create NFT Data to Export Settings")
+            layout.label(text="**Set a Save Path in Create NFT Data to Export Settings")
 
         row = layout.row()
         row.prop(input_tool_scene, "enable_debug")
@@ -1116,7 +1109,7 @@ class BMNFTS_PT_Other(bpy.types.Panel):
         row.prop(input_tool_scene, "order_num_offset")
 
         row = layout.row()
-        layout.label(text=f"Looking for help?")
+        layout.label(text="Looking for help?")
 
         row = layout.row()
         row.operator("wm.url_open", text="Blend_My_NFTs Documentation",

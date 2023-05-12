@@ -51,7 +51,7 @@ class CUSTOM_OT_custom_metadata_fields_actions(Operator):
                 self.report({'INFO'}, info)
 
             elif self.action == 'REMOVE':
-                info = 'Item "%s" removed from list' % (scn.custom_metadata_fields[idx].name)
+                info = f'Item "{scn.custom_metadata_fields[idx].name}" removed from list'
                 scn.custom_metadata_fields_index -= 1
                 scn.custom_metadata_fields.remove(idx)
                 self.report({'INFO'}, info)
@@ -61,7 +61,7 @@ class CUSTOM_OT_custom_metadata_fields_actions(Operator):
                 item = scn.custom_metadata_fields.add()
                 item.name = "Custom Metadata Field"  # The name of each object
                 scn.custom_metadata_fields_index = len(scn.custom_metadata_fields) - 1
-                info = '"%s" added to list' % (item.name)
+                info = f'"{item.name}" added to list'
                 self.report({'INFO'}, info)
             else:
                 self.report({'INFO'}, "Nothing selected in the Viewport")

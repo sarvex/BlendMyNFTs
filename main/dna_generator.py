@@ -49,12 +49,12 @@ def generate_nft_dna(
             dna_str_list.append(str1)
 
         for i in dna_str_list:
-            num = "-" + str(i)
+            num = f"-{str(i)}"
             dna_str += num
 
         dna = ''.join(dna_str.split('-', 1))
 
-        return str(dna)
+        return dna
 
     def create_dna_rarity(hierarchy):
         """
@@ -94,7 +94,7 @@ def generate_nft_dna(
                     f"https://github.com/torrinworx/Blend_My_NFTs#blender-file-organization-and-structure\n"
                 )
 
-            single_dna += "-" + str(variant_by_num[0])
+            single_dna += f"-{str(variant_by_num[0])}"
         single_dna = ''.join(single_dna.split('-', 1))
         return single_dna
 
@@ -187,9 +187,7 @@ def make_batches(
     These files are then saved as Batch#.json files to batch_json_save_path
     """
 
-    # Clears the Batch Data folder of Batches:
-    batch_list = os.listdir(batch_json_save_path)
-    if batch_list:
+    if batch_list := os.listdir(batch_json_save_path):
         for i in batch_list:
             batch = os.path.join(batch_json_save_path, i)
             if os.path.exists(batch):
@@ -218,7 +216,7 @@ def make_batches(
 
     for i in range(num_batches):
         if i != range(num_batches)[-1]:
-            batch_dna_list = list(dna_list[0:nfts_per_batch])
+            batch_dna_list = list(dna_list[:nfts_per_batch])
             batches_dna_list.append(batch_dna_list)
 
             dna_list = [x for x in dna_list if x not in batch_dna_list]
@@ -226,9 +224,9 @@ def make_batches(
             batch_dna_list = dna_list
 
         batch_dictionary = {
-            "nfts_in_batch": int(len(batch_dna_list)),
+            "nfts_in_batch": len(batch_dna_list),
             "hierarchy": hierarchy,
-            "batch_dna_list": batch_dna_list
+            "batch_dna_list": batch_dna_list,
         }
 
         batch_dictionary = json.dumps(batch_dictionary, indent=1, ensure_ascii=True)

@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 def reconstruct_dna(deconstructed_dna):
     reconstructed_dna = ""
     for a in deconstructed_dna:
-        num = "-" + str(a)
+        num = f"-{str(a)}"
         reconstructed_dna += num
     return ''.join(reconstructed_dna.split('-', 1))
 
@@ -51,16 +51,12 @@ def logic_rarity(variant_list, enable_rarity, a):
         rarity_list_of_i.append(float(rarity))
 
     for b in rarity_list_of_i:
-        if b == 0:
-            if_zero_bool = True
-        elif b != 0:
-            if_zero_bool = False
-
+        if_zero_bool = b == 0
     if enable_rarity:
         try:
             if if_zero_bool:
                 variant_num = random.choices(number_list_of_i, k=1)
-            elif not if_zero_bool:
+            else:
                 variant_num = random.choices(number_list_of_i, weights=rarity_list_of_i, k=1)
         except IndexError:
             log.error(
@@ -110,34 +106,37 @@ def apply_rule_to_dna(hierarchy, deconstructed_dna, if_dict, result_dict, result
 
     # If Variants in if_dict are selected, select random or rarity variants or set the to Empty depending on the rule.
     if result_dict_type == "NOT":
-            for a in result_dict:  # For each Attribute in the NOT rule dictionary
-                attribute_index = list(hierarchy.keys()).index(a)
-                attribute = list(hierarchy.keys())[attribute_index]
-                full_att = list(result_dict[attribute].keys()) == list(
-                    hierarchy[attribute].keys())  # True if full attribute in rules
+        for a in result_dict:  # For each Attribute in the NOT rule dictionary
+            attribute_index = list(hierarchy.keys()).index(a)
+            attribute = list(hierarchy.keys())[attribute_index]
+            full_att = list(result_dict[attribute].keys()) == list(
+                hierarchy[attribute].keys())  # True if full attribute in rules
 
-                if if_list_selected:
-                    # If 'a' is a full Attribute and Variants in if_dict selected, set 'a' to empty (0):
-                    if full_att:
-                        deconstructed_dna[attribute_index] = "0"
+            if if_list_selected:
+                # If 'a' is a full Attribute and Variants in if_dict selected, set 'a' to empty (0):
+                if full_att:
+                    deconstructed_dna[attribute_index] = "0"
 
                     # Not a full Attribute, invert the variants selected so that we get a list
                     # of just variants that can be selected. Because the NOT variants are what we don't want selected:
-                    if not full_att:
-                        var_selected_list = list(result_dict[a].keys())  # list of variants from 'NOT'
-                        att_selected_list = list(hierarchy[a].keys())  # full list of variants from hierarchy attribute
+                if not full_att:
+                    var_selected_list = list(result_dict[a].keys())  # list of variants from 'NOT'
+                    att_selected_list = list(hierarchy[a].keys())  # full list of variants from hierarchy attribute
 
-                        # Invert Variants set in NOT rule:
-                        var_selected_list = [i for i in att_selected_list if i not in var_selected_list]
+                    # Invert Variants set in NOT rule:
+                    var_selected_list = [i for i in att_selected_list if i not in var_selected_list]
 
-                        var_selected_list_complete = {}
-                        for i in var_selected_list:
-                            var_selected_list_complete[i] = get_var_info(i, hierarchy)
-                        result_dict[a] = var_selected_list_complete
+                    var_selected_list_complete = {
+                        i: get_var_info(i, hierarchy)
+                        for i in var_selected_list
+                    }
+                    result_dict[a] = var_selected_list_complete
 
-                        # Select random or rarity from new result_dict with inverted variants if attribute is not full
-                        variant_list = list(result_dict[a].keys())
-                        deconstructed_dna[int(attribute_index)] = logic_rarity(variant_list, enable_rarity, a)
+                    # Select random or rarity from new result_dict with inverted variants if attribute is not full
+                    variant_list = list(result_dict[a].keys())
+                    deconstructed_dna[attribute_index] = logic_rarity(
+                        variant_list, enable_rarity, a
+                    )
 
     else:  # if result_dict_type == "THEN" basically
         for a in result_dict:
@@ -155,7 +154,9 @@ def apply_rule_to_dna(hierarchy, deconstructed_dna, if_dict, result_dict, result
 
             # If Variants in if_dict selected, regardless if they make a full variant, select items from result_dict
             if if_list_selected:
-                deconstructed_dna[int(attribute_index)] = logic_rarity(variant_list, enable_rarity, a)
+                deconstructed_dna[attribute_index] = logic_rarity(
+                    variant_list, enable_rarity, a
+                )
 
     return deconstructed_dna
 
@@ -199,21 +200,16 @@ def get_rule_break_type(hierarchy, deconstructed_dna, if_dict, result_dict, resu
             continue
         break
 
-    # Rule Bool return summary:
-    violates_rule = False
-
-    # If Variants in 'if_dict' found in deconstructed_dna and Variants in 'result_dict' not found in deconstructed_dna:
-    if if_bool and then_bool:
-        violates_rule = True
-
-    elif if_bool and result_bool and result_dict_type == "NOT":
-        violates_rule = True
-
-    # If Variants in 'if_dict' not found in deconstructed_dna, and 'result_dict' variants are found in
-    # deconstructed_dna, and they are a part of a full Attribute in 'then_dict'
-    elif not if_bool and result_bool and full_att_bool:
-        violates_rule = True
-
+    violates_rule = bool(
+        if_bool
+        and then_bool
+        or if_bool
+        and result_bool
+        and result_dict_type == "NOT"
+        or not if_bool
+        and result_bool
+        and full_att_bool
+    )
     # If Variants in 'if_dict' not found in deconstructed_dna, but Variants in 'then_dict' are found in
     # deconstructed_dna, and don't make up a full Attribute:
     # elif not if_bool and result_bool and not full_att_bool:
@@ -267,10 +263,7 @@ def create_dicts(hierarchy, rule_list_items, result_dict_type):
         for b in hierarchy:
             if a == b:  # If 'a' is an Attribute, add all 'a' Variants to items_returned dict.
                 variant_list_of_a = list(hierarchy[a].keys())
-                variant_dict_of_a = {}
-                for c in variant_list_of_a:
-                    variant_dict_of_a[c] = get_var_info(c, hierarchy)
-
+                variant_dict_of_a = {c: get_var_info(c, hierarchy) for c in variant_list_of_a}
                 items_returned[a] = variant_dict_of_a
 
             if a in list(hierarchy[b].keys()):  # If 'a' is a Variant, add all info about that variant to items_returned

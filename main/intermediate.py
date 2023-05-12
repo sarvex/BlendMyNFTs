@@ -18,15 +18,15 @@ def send_to_record(input, reverse_order=False):
 
         if input.enable_logic_json and not input.logic_file:
             log.error(
-                    f"No Logic.json file path set. Please set the file path to your Logic.json file."
+                "No Logic.json file path set. Please set the file path to your Logic.json file."
             )
             raise
 
         if not input.enable_logic_json:
             scn = bpy.context.scene
+            num = 1
             if reverse_order:
                 input.logic_file = {}
-                num = 1
                 for i in range(scn.logic_fields_index, -1, -1):
                     item = scn.logic_fields[i]
 
@@ -40,7 +40,6 @@ def send_to_record(input, reverse_order=False):
                     num += 1
             else:
                 input.logic_file = {}
-                num = 1
                 for item in scn.logic_fields:
                     item_list1 = item.item_list1
                     rule_type = item.rule_type
